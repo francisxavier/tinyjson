@@ -4,6 +4,6 @@
     <ClInclude Include="TinyJson.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TinyJsonUnitTests.cpp" />
+    <ClCompile Include="Test.cpp" />
   </ItemGroup>
 </Project>
