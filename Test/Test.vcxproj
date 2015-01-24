@@ -80,7 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Test.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="TestArray.cpp" />
     <ClCompile Include="TestBoolean.cpp" />
     <ClCompile Include="TestNumber.cpp" />
