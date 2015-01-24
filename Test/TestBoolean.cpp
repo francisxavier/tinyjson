@@ -14,7 +14,7 @@ void TestBoolean()
         auto value = r.Read();
         Check(value->IsBoolean());
 
-        const bool actual = Convert<bool>(value);
+        const auto actual = Convert<bool>(value);
         CheckEqual(actual, expected);
     };
 

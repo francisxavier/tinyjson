@@ -14,7 +14,7 @@ void TestString()
         auto value = r.Read();
         Check(value->IsString());
 
-        const string actual = Convert<string>(value);
+        const auto actual = Convert<string>(value);
         CheckEqual(actual, expected);
     };
 

@@ -88,6 +88,7 @@
     <ClCompile Include="TestString.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\TinyJson.h" />
     <ClInclude Include="TestUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

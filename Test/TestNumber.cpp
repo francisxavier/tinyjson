@@ -14,7 +14,7 @@ void TestNumber()
         auto value = r.Read();
         Check(value->IsNumber());
 
-        const double actual = Convert<double>(value);
+        const auto actual = Convert<double>(value);
         CheckEqual(actual, expected);
     };
 

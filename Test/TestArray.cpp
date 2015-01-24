@@ -14,7 +14,7 @@ void TestArray()
         auto value = r.Read();
         Check(value->IsArray());
 
-        const vector<int> actual = Convert<vector<int>>(value);
+        const auto actual = Convert<vector<int>>(value);
         CheckEqual(actual, vector<int>{10, 20, 30});
     }
 
@@ -25,7 +25,7 @@ void TestArray()
         auto value = r.Read();
         Check(value->IsArray());
 
-        const vector<vector<int>> actual = Convert<vector<vector<int>>>(value);
+        const auto actual = Convert<vector<vector<int>>>(value);
         CheckEqual(actual, vector<vector<int>>
         {
             { 1, 2 },
@@ -46,5 +46,16 @@ void TestArray()
         CheckEqual(arr[1]->AsString(), string("hello"));
         CheckEqual(arr[2]->AsBoolean(), true);
         Check(arr[3]->IsNull());
+    }
+
+    // Pair of values
+    {
+        Reader r(R"( ["hello", 10] )");
+
+        auto value = r.Read();
+        Check(value->IsArray());
+
+        const auto actual = Convert<pair<string, int>>(value);
+        CheckEqual(actual, make_pair(string("hello"), 10));
     }
 }

@@ -14,7 +14,7 @@ void TestObject()
         auto value = r.Read();
         Check(value->IsObject());
 
-        const map<string, int> actual = Convert<map<string, int>>(value);
+        const auto actual = Convert<map<string, int>>(value);
         CheckEqual(actual, map<string, int>
         {
             { "hello", 1 },
@@ -29,7 +29,7 @@ void TestObject()
         auto value = r.Read();
         Check(value->IsObject());
 
-        const map<string, map<string, int>> actual = Convert<map<string, map<string, int>>>(value);
+        const auto actual = Convert<map<string, map<string, int>>>(value);
         CheckEqual(actual, map<string, map<string, int>>{ {"hello", { {"world", 10} }} });
     }
 

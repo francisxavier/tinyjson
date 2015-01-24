@@ -468,10 +468,10 @@ namespace TinyJson
         {
             Container result;
 
-            const auto &v = value->AsArray();
-            result.reserve(v.size());
+            const auto &arr = value->AsArray();
+            result.reserve(arr.size());
 
-            for( const auto &item: v )
+            for( const auto &item: arr )
                 result.push_back(Convert<Container::value_type>(item));
 
             return result;
@@ -512,6 +512,19 @@ namespace TinyJson
         static bool From(const std::unique_ptr<Value> &value)
         {
             return value->AsBoolean();
+        }
+    };
+
+    template <class T, class U>
+    struct ConvertTo<std::pair<T, U>>
+    {
+        static std::pair<T, U> From(const std::unique_ptr<Value> &value)
+        {
+            const auto &arr = value->AsArray();
+            if( arr.size() != 2 )
+                throw std::runtime_error("pair must contain exactly two items");
+
+            return std::make_pair(Convert<T>(arr[0]), Convert<U>(arr[1]));
         }
     };
 
