@@ -18,6 +18,8 @@ int main()
         TestString();
         TestArray();
         TestObject();
+
+        cout << "All tests passed" << endl;
     }
     catch(const exception &e)
     {

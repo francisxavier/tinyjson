@@ -31,7 +31,7 @@ namespace TinyJson
     struct Value
     {
         explicit Value() =default;
-        virtual ~Value() =0 { }
+        virtual ~Value() =0;
 
         explicit Value(const Value &) =delete;
         void operator =(const Value &) =delete;
@@ -51,6 +51,8 @@ namespace TinyJson
         virtual const ObjectType &AsObject() const { throw std::runtime_error("value is not an object"); }
         virtual const BooleanType &AsBoolean() const { throw std::runtime_error("value is not a boolean"); }
     };
+
+    inline Value::~Value() { }
 
     struct Null : public Value
     {
