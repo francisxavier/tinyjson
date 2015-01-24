@@ -9,7 +9,7 @@ void TestObject()
 {
     // Simple object
     {
-        Reader r(" { \"hello\" : 1, \"world\" : 2 } ");
+        Reader r(R"( {"hello" : 1, "world" : 2} )");
 
         auto value = r.Read();
         Check(value->IsObject());
@@ -24,7 +24,7 @@ void TestObject()
 
     // Nested object
     {
-        Reader r(" { \"hello\" : { \"world\": 10 } } ");
+        Reader r(R"( {"hello" : {"world" : 10}} )");
 
         auto value = r.Read();
         Check(value->IsObject());
@@ -35,7 +35,7 @@ void TestObject()
 
     // Object of various values
     {
-        Reader r(" {\"a\":10, \"b\":\"hello\", \"c\":true, \"d\":null } ");
+        Reader r(R"( {"a":10, "b":"hello", "c":true, "d":null } )");
 
         auto value = r.Read();
         Check(value->IsObject());

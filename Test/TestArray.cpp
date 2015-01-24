@@ -9,7 +9,7 @@ void TestArray()
 {
     // Simple array
     {
-        Reader r("[10, 20, 30]");
+        Reader r(" [10, 20, 30] ");
 
         auto value = r.Read();
         Check(value->IsArray());
@@ -20,7 +20,7 @@ void TestArray()
 
     // Array of arrays
     {
-        Reader r("[[1, 2], [3, 4]]");
+        Reader r(" [[1, 2], [3, 4]] ");
 
         auto value = r.Read();
         Check(value->IsArray());
@@ -35,7 +35,7 @@ void TestArray()
 
     // Array of various values
     {
-        Reader r("[10, \"hello\", true, null]");
+        Reader r(R"( [10, "hello", true, null] )");
 
         auto value = r.Read();
         Check(value->IsArray());

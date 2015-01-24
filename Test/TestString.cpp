@@ -18,7 +18,7 @@ void TestString()
         CheckEqual(actual, expected);
     };
 
-    Test(" \"hello world!\" ", "hello world!");
-    Test(" \"\\\"quoted text\\\"\" ", "\"quoted text\"");
-    Test(" \"first line.\\nsecond line.\" ", "first line.\nsecond line.");
+    Test(R"( "hello world!" )", "hello world!");
+    Test(R"( "\"quoted text\"" )", "\"quoted text\"");
+    Test(R"( "first line.\nsecond line." )", "first line.\nsecond line.");
 }
