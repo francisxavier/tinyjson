@@ -52,7 +52,7 @@ namespace TinyJson
         virtual const BooleanType &AsBoolean() const { throw std::runtime_error("value is not a boolean"); }
     };
 
-    inline Value::~Value() { }
+    inline Value::~Value() =default;
 
     struct Null : public Value
     {
