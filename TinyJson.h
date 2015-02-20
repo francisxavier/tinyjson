@@ -10,7 +10,7 @@
 
 namespace TinyJson
 {
-    struct Value;
+    struct ValueBase;
 
     enum class ValueType
     {
@@ -22,19 +22,21 @@ namespace TinyJson
         Boolean
     };
 
-    typedef double NumberType;
-    typedef std::string StringType;
-    typedef std::vector<std::unique_ptr<Value>> ArrayType;
-    typedef std::map<std::string, std::unique_ptr<Value>> ObjectType;
-    typedef bool BooleanType;
+    using Value = std::unique_ptr<ValueBase>;
 
-    struct Value
+    using NumberType = double;
+    using StringType = std::string;
+    using ArrayType = std::vector<Value>;
+    using ObjectType = std::map<std::string, Value>;
+    using BooleanType = bool;
+
+    struct ValueBase
     {
-        explicit Value() =default;
-        virtual ~Value() =0;
+        explicit ValueBase() =default;
+        virtual ~ValueBase() =0;
 
-        explicit Value(const Value &) =delete;
-        void operator =(const Value &) =delete;
+        explicit ValueBase(const ValueBase &) =delete;
+        void operator =(const ValueBase &) =delete;
 
         virtual ValueType Type() const =0;
 
@@ -52,14 +54,14 @@ namespace TinyJson
         virtual const BooleanType &AsBoolean() const { throw std::runtime_error("value is not a boolean"); }
     };
 
-    inline Value::~Value() =default;
+    inline ValueBase::~ValueBase() =default;
 
-    struct Null : public Value
+    struct Null : public ValueBase
     {
         ValueType Type() const override { return ValueType::Null; }
     };
 
-    struct Number : public Value
+    struct Number : public ValueBase
     {
         NumberType value;
 
@@ -67,7 +69,7 @@ namespace TinyJson
         const NumberType &AsNumber() const override { return value; }
     };
 
-    struct String : public Value
+    struct String : public ValueBase
     {
         StringType value;
 
@@ -75,7 +77,7 @@ namespace TinyJson
         const StringType &AsString() const override { return value; }
     };
 
-    struct Array : public Value
+    struct Array : public ValueBase
     {
         ArrayType value;
 
@@ -83,7 +85,7 @@ namespace TinyJson
         const ArrayType &AsArray() const override { return value; }
     };
 
-    struct Object : public Value
+    struct Object : public ValueBase
     {
         ObjectType value;
 
@@ -91,7 +93,7 @@ namespace TinyJson
         const ObjectType &AsObject() const override { return value; }
     };
 
-    struct Boolean : public Value
+    struct Boolean : public ValueBase
     {
         BooleanType value;
 
@@ -140,7 +142,7 @@ namespace TinyJson
         template <class T, class U>
         static std::unique_ptr<T> CreateValue(U &&value)
         {
-            static_assert(std::is_base_of<Value, T>::value, "internal error: invalid type passed to CreateValue");
+            static_assert(std::is_base_of<ValueBase, T>::value, "internal error: invalid type passed to CreateValue");
 
             std::unique_ptr<T> ptr(new T());
             ptr->value = std::move(value);
@@ -160,7 +162,7 @@ namespace TinyJson
             return true;
         }
 
-        static std::unique_ptr<Value> ReadValue(const char *&pData)
+        static Value ReadValue(const char *&pData)
         {
             SkipWhitespace(pData);
 
@@ -297,12 +299,12 @@ namespace TinyJson
             ++pData;
         }
 
-        static std::string ReadString(const char *&pData)
+        static StringType ReadString(const char *&pData)
         {
             assert(*pData == '"');
             ++pData;
 
-            std::string str;
+            StringType str;
 
             for( ; *pData; ++pData )
             {
@@ -346,12 +348,12 @@ namespace TinyJson
             return str;
         }
 
-        static std::vector<std::unique_ptr<Value>> ReadArray(const char *&pData)
+        static ArrayType ReadArray(const char *&pData)
         {
             assert(*pData == '[');
             ++pData;
 
-            std::vector<std::unique_ptr<Value>> arr;
+            ArrayType arr;
 
             for( ;; )
             {
@@ -381,12 +383,12 @@ namespace TinyJson
             return ReadString(pData);
         }
 
-        static std::map<std::string, std::unique_ptr<Value>> ReadObject(const char *&pData)
+        static ObjectType ReadObject(const char *&pData)
         {
             assert(*pData == '{');
             ++pData;
 
-            std::map<std::string, std::unique_ptr<Value>> obj;
+            ObjectType obj;
 
             for( ;; )
             {
@@ -422,7 +424,7 @@ namespace TinyJson
                 throw std::invalid_argument("data is null");
         }
 
-        std::unique_ptr<Value> Read()
+        Value Read()
         {
             return ReadValue(m_pData);
         }
@@ -434,7 +436,7 @@ namespace TinyJson
     template <class T>
     struct ConvertToNumber
     {
-        static T From(const std::unique_ptr<Value> &value)
+        static T From(const Value &value)
         {
             return static_cast<T>(value->AsNumber());
         }
@@ -455,7 +457,7 @@ namespace TinyJson
     template <>
     struct ConvertTo<std::string>
     {
-        static std::string From(const std::unique_ptr<Value> &value)
+        static std::string From(const Value &value)
         {
             return value->AsString();
         }
@@ -464,7 +466,7 @@ namespace TinyJson
     template <class Container>
     struct ConvertToSequenceContainer
     {
-        static Container From(const std::unique_ptr<Value> &value)
+        static Container From(const Value &value)
         {
             Container result;
 
@@ -488,7 +490,7 @@ namespace TinyJson
     template <class Container>
     struct ConvertToAssociativeContainer
     {
-        static Container From(const std::unique_ptr<Value> &value)
+        static Container From(const Value &value)
         {
             Container result;
 
@@ -509,7 +511,7 @@ namespace TinyJson
     template <>
     struct ConvertTo<bool>
     {
-        static bool From(const std::unique_ptr<Value> &value)
+        static bool From(const Value &value)
         {
             return value->AsBoolean();
         }
@@ -518,7 +520,7 @@ namespace TinyJson
     template <class T, class U>
     struct ConvertTo<std::pair<T, U>>
     {
-        static std::pair<T, U> From(const std::unique_ptr<Value> &value)
+        static std::pair<T, U> From(const Value &value)
         {
             const auto &arr = value->AsArray();
             if( arr.size() != 2 )
@@ -529,7 +531,7 @@ namespace TinyJson
     };
 
     template <class T>
-    T Convert(const std::unique_ptr<Value> &value)
+    T Convert(const Value &value)
     {
         return ConvertTo<T>::From(value);
     }
