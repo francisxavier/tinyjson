@@ -9,9 +9,9 @@ void TestBoolean()
 {
     const auto Test = [] (const char *const pData, const bool expected)
     {
-        Reader r(pData);
+        auto stream = MakeStream(pData);
 
-        auto value = r.Read();
+        auto value = Read(stream);
         Check(value->IsBoolean());
 
         const auto actual = Convert<bool>(value);

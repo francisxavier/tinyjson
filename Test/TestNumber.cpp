@@ -9,9 +9,9 @@ void TestNumber()
 {
     const auto Test = [] (const char *const pData, const double expected)
     {
-        Reader r(pData);
+        auto stream = MakeStream(pData);
 
-        auto value = r.Read();
+        auto value = Read(stream);
         Check(value->IsNumber());
 
         const auto actual = Convert<double>(value);

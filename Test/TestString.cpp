@@ -7,11 +7,11 @@ using namespace TinyJson;
 
 void TestString()
 {
-    const auto Test = [] (const char *const pData, const string &expected)
+    const auto Test = [] (const string &data, const string &expected)
     {
-        Reader r(pData);
-        
-        auto value = r.Read();
+        auto stream = MakeStream(data.begin(), data.end());
+
+        auto value = Read(stream);
         Check(value->IsString());
 
         const auto actual = Convert<string>(value);

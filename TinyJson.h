@@ -113,10 +113,39 @@ namespace TinyJson
     case '8': \
     case '9'
 
+    template <class Itr>
+    class CharItr
+    {
+        static_assert(std::is_same<typename std::iterator_traits<Itr>::value_type, char>::value, "char iterator expected");
+
+        Itr itr;
+        Itr end;
+
+    public:
+        explicit CharItr(const Itr &begin_, const Itr &end_) :
+            itr(begin_),
+            end(end_)
+        {
+        }
+
+        char operator *() const
+        {
+            if( itr != end )
+                return *itr;
+
+            return 0;
+        }
+
+        void operator ++()
+        {
+            if( itr != end )
+                ++itr;
+        }
+    };
+
+    template <class Itr>
     class Reader
     {
-        const char *m_pData;
-
         static bool IsWhitespace(const char ch)
         {
             switch( ch )
@@ -133,10 +162,10 @@ namespace TinyJson
             return false;
         }
 
-        static void SkipWhitespace(const char *&pData)
+        static void SkipWhitespace(Itr &itr)
         {
-            while( IsWhitespace(*pData) )
-                ++pData;
+            while( IsWhitespace(*itr) )
+                ++itr;
         }
 
         template <class T, class U>
@@ -151,94 +180,50 @@ namespace TinyJson
         }
 
         template <std::size_t N>
-        static bool TryReadExpectedString(const char *&pData, const char(&pStr)[N])
+        static bool TryReadExpectedString(Itr &itr, const char(&pStr)[N])
         {
             static_assert(N > 0, "internal error: string not null-terminated");
 
-            if( strncmp(pData, pStr, (N - 1)) != 0 )
-                return false;
+            for(std::size_t i = 0; i < (N - 1); ++i, ++itr)
+                if( *itr != pStr[i] )
+                    return false;
 
-            pData += (N - 1);
             return true;
         }
 
-        static ValuePtr ReadValue(const char *&pData)
-        {
-            SkipWhitespace(pData);
-
-            switch( *pData )
-            {
-                case '-':
-                case TinyJson_Digits_0_9:
-                    return CreateValue<NumberValue>(ReadNumber(pData));
-
-                case '"':
-                    return CreateValue<StringValue>(ReadString(pData));
-
-                case '[':
-                    return CreateValue<ArrayValue>(ReadArray(pData));
-
-                case '{':
-                    return CreateValue<ObjectValue>(ReadObject(pData));
-
-                case 't':
-                {
-                    if( TryReadExpectedString(pData, "true") )
-                        return CreateValue<BooleanValue>(true);
-                }
-                break;
-
-                case 'f':
-                {
-                    if( TryReadExpectedString(pData, "false") )
-                        return CreateValue<BooleanValue>(false);
-                }
-                break;
-
-                case 'n':
-                {
-                    if( TryReadExpectedString(pData, "null") )
-                        return std::unique_ptr<NullValue>(new NullValue());
-                }
-                break;
-            }
-
-            throw std::runtime_error("Invalid format");
-        }
-
-        static double ReadNumber(const char *&pData)
+        static double ReadNumber(Itr &itr)
         {
             int sign = 1;
-            if( *pData == '-' )
+            if( *itr == '-' )
             {
                 sign = -1;
-                ++pData;
+                ++itr;
             }
 
             double number = 0;
-            for( ; *pData; ++pData )
+            for( ; *itr; ++itr )
             {
-                switch( *pData )
+                switch( *itr )
                 {
                     case TinyJson_Digits_0_9:
-                        number = number * 10 + (*pData - '0');
+                        number = number * 10 + (*itr - '0');
                         continue;
                 }
 
                 break;
             }
 
-            if( *pData == '.' )
+            if( *itr == '.' )
             {
-                ++pData;
+                ++itr;
 
                 int factor = 1;
-                for( ; *pData; ++pData, factor *= 10 )
+                for( ; *itr; ++itr, factor *= 10 )
                 {
-                    switch( *pData )
+                    switch( *itr )
                     {
                         case TinyJson_Digits_0_9:
-                            number = number * 10 + (*pData - '0');
+                            number = number * 10 + (*itr - '0');
                             continue;
                     }
 
@@ -248,28 +233,28 @@ namespace TinyJson
                 number /= factor;
             }
 
-            if( *pData == 'e' || *pData == 'E' )
+            if( *itr == 'e' || *itr == 'E' )
             {
-                ++pData;
+                ++itr;
 
                 bool eNegative = false;
-                if( *pData == '+' )
+                if( *itr == '+' )
                 {
-                    ++pData;
+                    ++itr;
                 }
-                else if( *pData == '-' )
+                else if( *itr == '-' )
                 {
                     eNegative = true;
-                    ++pData;
+                    ++itr;
                 }
 
                 int e = 0;
-                for( ; *pData; ++pData )
+                for( ; *itr; ++itr )
                 {
-                    switch( *pData )
+                    switch( *itr )
                     {
                         case TinyJson_Digits_0_9:
-                            e = e * 10 + (*pData - '0');
+                            e = e * 10 + (*itr - '0');
                             continue;
                     }
 
@@ -291,32 +276,32 @@ namespace TinyJson
             return number;
         }
 
-        static void ReadExpectedChar(const char *&pData, const char ch)
+        static void ReadExpectedChar(Itr &itr, const char ch)
         {
-            if( *pData != ch )
+            if( *itr != ch )
                 throw std::runtime_error("'" + std::string(1, ch) + "' expected");
 
-            ++pData;
+            ++itr;
         }
 
-        static String ReadString(const char *&pData)
+        static String ReadString(Itr &itr)
         {
-            assert(*pData == '"');
-            ++pData;
+            assert(*itr == '"');
+            ++itr;
 
             String str;
 
-            for( ; *pData; ++pData )
+            for( ; *itr; ++itr )
             {
-                if( *pData == '\\' )
+                if( *itr == '\\' )
                 {
-                    ++pData;
-                    switch( *pData )
+                    ++itr;
+                    switch( *itr )
                     {
                         case '"':
                         case '\\':
                         case '/':
-                            str.push_back(*pData);
+                            str.push_back(*itr);
                             break;
 
                         case 'b':str.push_back('\b'); break;
@@ -330,86 +315,86 @@ namespace TinyJson
                             break;
 
                         default:
-                            throw std::runtime_error("unrecognized character escape sequence: \\" + std::string(1, *pData));
+                            throw std::runtime_error("unrecognized character escape sequence: \\" + std::string(1, *itr));
                             break;
                     }
                 }
-                else if( *pData == '"' )
+                else if( *itr == '"' )
                 {
                     break;
                 }
                 else
                 {
-                    str.push_back(*pData);
+                    str.push_back(*itr);
                 }
             }
 
-            ReadExpectedChar(pData, '"');
+            ReadExpectedChar(itr, '"');
             return str;
         }
 
-        static Array ReadArray(const char *&pData)
+        static Array ReadArray(Itr &itr)
         {
-            assert(*pData == '[');
-            ++pData;
+            assert(*itr == '[');
+            ++itr;
 
             Array arr;
 
             for( ;; )
             {
-                arr.push_back(ReadValue(pData));
+                arr.push_back(ReadValue(itr));
 
-                SkipWhitespace(pData);
-                if( *pData == ',' )
+                SkipWhitespace(itr);
+                if( *itr == ',' )
                 {
-                    ++pData;
+                    ++itr;
                     continue;
                 }
 
-                ReadExpectedChar(pData, ']');
+                ReadExpectedChar(itr, ']');
                 break;
             }
 
             return arr;
         }
 
-        static std::string ReadKey(const char *&pData)
+        static std::string ReadKey(Itr &itr)
         {
-            SkipWhitespace(pData);
+            SkipWhitespace(itr);
 
-            if( *pData != '"' )
+            if( *itr != '"' )
                 throw std::runtime_error("string expected");
 
-            return ReadString(pData);
+            return ReadString(itr);
         }
 
-        static Object ReadObject(const char *&pData)
+        static Object ReadObject(Itr &itr)
         {
-            assert(*pData == '{');
-            ++pData;
+            assert(*itr == '{');
+            ++itr;
 
             Object obj;
 
             for( ;; )
             {
-                auto key = ReadKey(pData);
+                auto key = ReadKey(itr);
 
-                SkipWhitespace(pData);
-                ReadExpectedChar(pData, ':');
+                SkipWhitespace(itr);
+                ReadExpectedChar(itr, ':');
 
-                auto value = ReadValue(pData);
+                auto value = ReadValue(itr);
 
                 if( !obj.emplace(std::move(key), std::move(value)).second )
                     throw std::runtime_error("duplicate key: " + key);
 
-                SkipWhitespace(pData);
-                if( *pData == ',' )
+                SkipWhitespace(itr);
+                if( *itr == ',' )
                 {
-                    ++pData;
+                    ++itr;
                     continue;
                 }
 
-                ReadExpectedChar(pData, '}');
+                ReadExpectedChar(itr, '}');
                 break;
             }
 
@@ -417,18 +402,67 @@ namespace TinyJson
         }
 
     public:
-        explicit Reader(const char *const pData) :
-            m_pData(pData)
+        static ValuePtr ReadValue(Itr &itr)
         {
-            if( !pData )
-                throw std::invalid_argument("data is null");
-        }
+            SkipWhitespace(itr);
 
-        ValuePtr Read()
-        {
-            return ReadValue(m_pData);
+            switch( *itr )
+            {
+                case '-':
+                case TinyJson_Digits_0_9:
+                    return CreateValue<NumberValue>(ReadNumber(itr));
+
+                case '"':
+                    return CreateValue<StringValue>(ReadString(itr));
+
+                case '[':
+                    return CreateValue<ArrayValue>(ReadArray(itr));
+
+                case '{':
+                    return CreateValue<ObjectValue>(ReadObject(itr));
+
+                case 't':
+                {
+                    if( TryReadExpectedString(itr, "true") )
+                        return CreateValue<BooleanValue>(true);
+                }
+                break;
+
+                case 'f':
+                {
+                    if( TryReadExpectedString(itr, "false") )
+                        return CreateValue<BooleanValue>(false);
+                }
+                break;
+
+                case 'n':
+                {
+                    if( TryReadExpectedString(itr, "null") )
+                        return std::unique_ptr<NullValue>(new NullValue());
+                }
+                break;
+            }
+
+            throw std::runtime_error("Invalid format");
         }
     };
+
+    template <class Itr>
+    CharItr<Itr> MakeStream(const Itr &begin, const Itr &end)
+    {
+        return CharItr<Itr>(begin, end);
+    }
+
+    inline CharItr<const char *> MakeStream(const char *const pStr)
+    {
+        return MakeStream(pStr, pStr + std::strlen(pStr));
+    }
+
+    template <class Itr>
+    ValuePtr Read(CharItr<Itr> &stream)
+    {
+        return Reader<CharItr<Itr>>::ReadValue(stream);
+    }
 
     template <class T>
     struct ConvertTo;
