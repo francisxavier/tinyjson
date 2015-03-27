@@ -9,9 +9,7 @@ void TestObject()
 {
     // Simple object
     {
-        auto stream = MakeStream(R"( {"hello" : 1, "world" : 2} )");
-
-        auto value = Read(stream);
+        auto value = Read(R"( {"hello" : 1, "world" : 2} )");
         Check(value->IsObject());
 
         const auto actual = Convert<map<string, int>>(value);
@@ -24,9 +22,7 @@ void TestObject()
 
     // Nested object
     {
-        auto stream = MakeStream(R"( {"hello" : {"world" : 10}} )");
-
-        auto value = Read(stream);
+        auto value = Read(R"( {"hello" : {"world" : 10}} )");
         Check(value->IsObject());
 
         const auto actual = Convert<map<string, map<string, int>>>(value);
@@ -35,9 +31,7 @@ void TestObject()
 
     // Object of various values
     {
-        auto stream = MakeStream(R"( {"a":10, "b":"hello", "c":true, "d":null } )");
-
-        auto value = Read(stream);
+        auto value = Read(R"( {"a":10, "b":"hello", "c":true, "d":null } )");
         Check(value->IsObject());
 
         const auto &obj = value->AsObject();

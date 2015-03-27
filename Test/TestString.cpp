@@ -9,9 +9,7 @@ void TestString()
 {
     const auto Test = [] (const string &data, const string &expected)
     {
-        auto stream = MakeStream(data.begin(), data.end());
-
-        auto value = Read(stream);
+        auto value = Read(data.begin(), data.end());
         Check(value->IsString());
 
         const auto actual = Convert<string>(value);

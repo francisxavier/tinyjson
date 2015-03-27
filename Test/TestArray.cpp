@@ -9,9 +9,7 @@ void TestArray()
 {
     // Simple array
     {
-        auto stream = MakeStream(" [10, 20, 30] ");
-
-        auto value = Read(stream);
+        auto value = Read(" [10, 20, 30] ");
         Check(value->IsArray());
 
         const auto actual = Convert<vector<int>>(value);
@@ -20,9 +18,7 @@ void TestArray()
 
     // Array of arrays
     {
-        auto stream = MakeStream(" [[1, 2], [3, 4]] ");
-
-        auto value = Read(stream);
+        auto value = Read(" [[1, 2], [3, 4]] ");
         Check(value->IsArray());
 
         const auto actual = Convert<vector<vector<int>>>(value);
@@ -35,9 +31,7 @@ void TestArray()
 
     // Array of various values
     {
-        auto stream = MakeStream(R"( [10, "hello", true, null] )");
-
-        auto value = Read(stream);
+        auto value = Read(R"( [10, "hello", true, null] )");
         Check(value->IsArray());
 
         const auto &arr = value->AsArray();
@@ -50,9 +44,7 @@ void TestArray()
 
     // Pair of values
     {
-        auto stream = MakeStream(R"( ["hello", 10] )");
-
-        auto value = Read(stream);
+        auto value = Read(R"( ["hello", 10] )");
         Check(value->IsArray());
 
         const auto actual = Convert<pair<string, int>>(value);

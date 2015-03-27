@@ -464,6 +464,19 @@ namespace TinyJson
         return Reader<CharItr<Itr>>::ReadValue(stream);
     }
 
+    template <class Itr>
+    ValuePtr Read(const Itr &begin, const Itr &end)
+    {
+        auto stream = MakeStream(begin, end);
+        return Read(stream);
+    }
+
+    inline ValuePtr Read(const char *const pStr)
+    {
+        auto stream = MakeStream(pStr);
+        return Read(stream);
+    }
+
     template <class T>
     struct ConvertTo;
 
